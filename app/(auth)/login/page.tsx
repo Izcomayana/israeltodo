@@ -127,7 +127,7 @@ const Register = () => {
                 {form.formState.isSubmitting ? (
                   <Loader2 className="animate-spin w-5 h-5" />
                 ) : (
-                  "Register"
+                  "Login"
                 )}
               </Button>
             </div>
