@@ -1,23 +1,13 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { db } from "@/lib/firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-} from "firebase/firestore";
-import { format } from "date-fns";
-import { CalendarIcon, Trash2, MoreVertical } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react"
+import { format } from "date-fns"
+import { CalendarIcon, Plus, Trash2, MoreVertical } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -25,93 +15,110 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { Card, CardContent } from "@/components/ui/card"
 
 interface Task {
-  id: string;
-  title: string;
-  dueDate: Date;
-  createdAt: Date;
-  completed: boolean;
+  id: string
+  title: string
+  dueDate: Date
+  createdAt: Date
+  completed: boolean
 }
 
 export default function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskOpen, setNewTaskOpen] = useState(false);
-  const [taskDetailsOpen, setTaskDetailsOpen] = useState(false);
-  const [newTask, setNewTask] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(undefined);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [editedTask, setEditedTask] = useState<Partial<Task>>({});
-  const taskCollection = collection(db, "tasks");
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [newTaskOpen, setNewTaskOpen] = useState(false)
+  const [taskDetailsOpen, setTaskDetailsOpen] = useState(false)
+  const [newTask, setNewTask] = useState("")
+  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(undefined)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [editedTask, setEditedTask] = useState<Partial<Task>>({})
 
- 
+  // Load tasks from localStorage on component mount
   useEffect(() => {
-    const unsubscribe = onSnapshot(taskCollection, (snapshot) => {
-      const firebaseTasks = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          title: data.title,
-          dueDate: data.dueDate.toDate(),
-          createdAt: data.createdAt.toDate(),
-          completed: data.completed,
-        };
-      });
-      setTasks(firebaseTasks);
-    });
-    return () => unsubscribe();
-  }, []);
+    const savedTasks = localStorage.getItem("tasks")
+    if (savedTasks) {
+      try {
+        // Parse the JSON and convert date strings back to Date objects
+        const parsedTasks = JSON.parse(savedTasks).map((task: any) => ({
+          ...task,
+          dueDate: new Date(task.dueDate),
+          createdAt: new Date(task.createdAt),
+        }))
+        setTasks(parsedTasks)
+      } catch (error) {
+        console.error("Failed to parse tasks from localStorage:", error)
+      }
+    }
+  }, [])
 
-  const addTask = async (title: string, dueDate: Date) => {
-    await addDoc(taskCollection, {
-      title,
-      dueDate,
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks))
+  }, [tasks])
+
+  const addTask = () => {
+    if (newTask.trim() === "") return
+
+    const task: Task = {
+      id: Date.now().toString(),
+      title: newTask,
+      dueDate: newTaskDueDate || new Date(),
       createdAt: new Date(),
       completed: false,
-    });
-  };
+    }
 
-  const toggleTaskCompletion = async (task: Task) => {
-    const ref = doc(db, "tasks", task.id);
-    await updateDoc(ref, {
-      completed: !task.completed,
-    });
-  };
+    // Add new task to the beginning of the array
+    setTasks([task, ...tasks])
+    setNewTask("")
+    setNewTaskDueDate(undefined)
+    setNewTaskOpen(false)
+  }
 
-  const updateTask = async (task: Task, newData: Partial<Task>) => {
-    const ref = doc(db, "tasks", task.id);
-    await updateDoc(ref, newData);
-  };
+  const toggleTaskCompletion = (taskId: string) => {
+    setTasks(tasks.map((task) => (task.id === taskId ? { ...task, completed: !task.completed } : task)))
+  }
 
-  const deleteTask = async (taskId: string) => {
-    await deleteDoc(doc(db, "tasks", taskId));
-  };
-
-  const clearCompletedTasks = async () => {
-    const completed = tasks.filter((task) => task.completed);
-    await Promise.all(
-      completed.map((task) => deleteDoc(doc(db, "tasks", task.id)))
-    );
-  };
+  const clearCompletedTasks = () => {
+    setTasks(tasks.filter((task) => !task.completed))
+  }
 
   const openTaskDetails = (task: Task) => {
-    setSelectedTask(task);
+    setSelectedTask(task)
     setEditedTask({
       title: task.title,
       dueDate: task.dueDate,
-    });
-    setTaskDetailsOpen(true);
-  };
+    })
+    setTaskDetailsOpen(true)
+  }
+
+  const updateTask = () => {
+    if (!selectedTask || !editedTask.title) return
+
+    setTasks(
+      tasks.map((task) =>
+        task.id === selectedTask.id
+          ? {
+              ...task,
+              title: editedTask.title || task.title,
+              dueDate: editedTask.dueDate || task.dueDate,
+            }
+          : task,
+      ),
+    )
+    setTaskDetailsOpen(false)
+  }
+
+  const deleteTask = () => {
+    if (!selectedTask) return
+    setTasks(tasks.filter((task) => task.id !== selectedTask.id))
+    setTaskDetailsOpen(false)
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto py-0 border-0 rounded-lg shadow-lg my-5 bg-white">
@@ -125,18 +132,7 @@ export default function TaskList() {
               onClick={() => setNewTaskOpen(true)}
               className="text-[#50C2C9] hover:text-[#50c3c9c7] font-bold cursor-pointer"
             >
-              <svg
-                className="!w-8 !h-8"
-                stroke="currentColor"
-                fill="#50C2C9"
-                stroke-width="0"
-                viewBox="0 0 512 512"
-                height="8em"
-                width="8em"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M416 277.333H277.333V416h-42.666V277.333H96v-42.666h138.667V96h42.666v138.667H416v42.666z"></path>
-              </svg>
+              <svg className="!w-8 !h-8" stroke="currentColor" fill="#50C2C9" stroke-width="0" viewBox="0 0 512 512" height="8em" width="8em" xmlns="http://www.w3.org/2000/svg"><path d="M416 277.333H277.333V416h-42.666V277.333H96v-42.666h138.667V96h42.666v138.667H416v42.666z"></path></svg>
               <span className="sr-only">Add task</span>
             </Button>
           </div>
@@ -144,20 +140,18 @@ export default function TaskList() {
           <ScrollArea className="h-72">
             <div className="p-4">
               {tasks.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No tasks yet. Add one to get started!
-                </p>
+                <p className="text-center text-muted-foreground py-8">No tasks yet. Add one to get started!</p>
               ) : (
                 tasks.map((task) => (
                   <div
                     key={task.id}
                     className="flex items-center space-x-2 py-2 hover:bg-slate-50 px-2 rounded"
-                    onClick={() => toggleTaskCompletion(task)}
+                    onClick={() => toggleTaskCompletion(task.id)}
                   >
                     <Checkbox
                       id={`task-${task.id}`}
                       checked={task.completed}
-                      onCheckedChange={() => toggleTaskCompletion(task)}
+                      onCheckedChange={() => toggleTaskCompletion(task.id)}
                       onClick={(e) => e.stopPropagation()}
                       className="h-5 w-5 border-gray-400 data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
                     />
@@ -165,7 +159,7 @@ export default function TaskList() {
                       htmlFor={`task-${task.id}`}
                       className={cn(
                         "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1",
-                        task.completed && "line-through text-muted-foreground"
+                        task.completed && "line-through text-muted-foreground",
                       )}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -176,8 +170,8 @@ export default function TaskList() {
                       size="icon"
                       className="h-8 w-8 p-0 text-muted-foreground"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        openTaskDetails(task);
+                        e.stopPropagation()
+                        openTaskDetails(task)
                       }}
                     >
                       <MoreVertical className="h-4 w-4" />
@@ -203,13 +197,12 @@ export default function TaskList() {
         </div>
       </CardContent>
 
+      {/* Add Task Modal */}
       <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
-            <DialogDescription>
-              Create a new task with a title and due date.
-            </DialogDescription>
+            <DialogDescription>Create a new task with a title and due date.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -229,22 +222,15 @@ export default function TaskList() {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !newTaskDueDate && "text-muted-foreground"
+                      !newTaskDueDate && "text-muted-foreground",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {newTaskDueDate
-                      ? format(newTaskDueDate, "PPP p")
-                      : "Select date and time"}
+                    {newTaskDueDate ? format(newTaskDueDate, "PPP p") : "Select date and time"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={newTaskDueDate}
-                    onSelect={setNewTaskDueDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={newTaskDueDate} onSelect={setNewTaskDueDate} initialFocus />
                   <div className="p-3 border-t">
                     <Label htmlFor="time">Time</Label>
                     <Input
@@ -252,12 +238,10 @@ export default function TaskList() {
                       type="time"
                       className="mt-1"
                       onChange={(e) => {
-                        const [hours, minutes] = e.target.value
-                          .split(":")
-                          .map(Number);
-                        const date = newTaskDueDate || new Date();
-                        date.setHours(hours, minutes);
-                        setNewTaskDueDate(new Date(date));
+                        const [hours, minutes] = e.target.value.split(":").map(Number)
+                        const date = newTaskDueDate || new Date()
+                        date.setHours(hours, minutes)
+                        setNewTaskDueDate(new Date(date))
                       }}
                     />
                   </div>
@@ -269,22 +253,12 @@ export default function TaskList() {
             <Button variant="outline" onClick={() => setNewTaskOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={() => {
-                if (newTask && newTaskDueDate) {
-                  addTask(newTask, newTaskDueDate);
-                  setNewTask("");
-                  setNewTaskDueDate(undefined);
-                  setNewTaskOpen(false);
-                }
-              }}
-            >
-              Add Task
-            </Button>
+            <Button onClick={addTask}>Add Task</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Task Details Modal */}
       <Dialog open={taskDetailsOpen} onOpenChange={setTaskDetailsOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -297,38 +271,27 @@ export default function TaskList() {
                 <Input
                   id="edit-task"
                   value={editedTask.title || ""}
-                  onChange={(e) =>
-                    setEditedTask({ ...editedTask, title: e.target.value })
-                  }
+                  onChange={(e) => setEditedTask({ ...editedTask, title: e.target.value })}
                 />
               </div>
               <div className="grid gap-2">
                 <Label>Created At</Label>
-                <div className="p-2 border rounded-md bg-muted">
-                  {format(selectedTask.createdAt, "PPP p")}
-                </div>
+                <div className="p-2 border rounded-md bg-muted">{format(selectedTask.createdAt, "PPP p")}</div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-due-date">Due Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {editedTask.dueDate
-                        ? format(editedTask.dueDate, "PPP p")
-                        : "Select date and time"}
+                      {editedTask.dueDate ? format(editedTask.dueDate, "PPP p") : "Select date and time"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
                     <Calendar
                       mode="single"
                       selected={editedTask.dueDate}
-                      onSelect={(date) =>
-                        setEditedTask({ ...editedTask, dueDate: date })
-                      }
+                      onSelect={(date) => setEditedTask({ ...editedTask, dueDate: date })}
                       initialFocus
                     />
                     <div className="p-3 border-t">
@@ -339,25 +302,14 @@ export default function TaskList() {
                         className="mt-1"
                         defaultValue={
                           editedTask.dueDate
-                            ? `${editedTask.dueDate
-                                .getHours()
-                                .toString()
-                                .padStart(2, "0")}:${editedTask.dueDate
-                                .getMinutes()
-                                .toString()
-                                .padStart(2, "0")}`
+                            ? `${editedTask.dueDate.getHours().toString().padStart(2, "0")}:${editedTask.dueDate.getMinutes().toString().padStart(2, "0")}`
                             : ""
                         }
                         onChange={(e) => {
-                          const [hours, minutes] = e.target.value
-                            .split(":")
-                            .map(Number);
-                          const date = editedTask.dueDate || new Date();
-                          date.setHours(hours, minutes);
-                          setEditedTask({
-                            ...editedTask,
-                            dueDate: new Date(date),
-                          });
+                          const [hours, minutes] = e.target.value.split(":").map(Number)
+                          const date = editedTask.dueDate || new Date()
+                          date.setHours(hours, minutes)
+                          setEditedTask({ ...editedTask, dueDate: new Date(date) })
                         }}
                       />
                     </div>
@@ -367,34 +319,18 @@ export default function TaskList() {
             </div>
           )}
           <DialogFooter className="flex justify-between">
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (selectedTask) deleteTask(selectedTask.id);
-                setTaskDetailsOpen(false);
-              }}
-            >
+            <Button variant="destructive" onClick={deleteTask}>
               Delete
             </Button>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setTaskDetailsOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setTaskDetailsOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                onClick={() => {
-                  if (selectedTask) updateTask(selectedTask, editedTask);
-                  setTaskDetailsOpen(false);
-                }}
-              >
-                Save Changes
-              </Button>
+              <Button onClick={updateTask}>Save Changes</Button>
             </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
-  );
+  )
 }
