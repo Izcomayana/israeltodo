@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
-import { CalendarIcon, Plus, Trash2, MoreVertical } from "lucide-react"
+import { CalendarIcon, Trash2, MoreVertical } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
