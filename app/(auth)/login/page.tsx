@@ -19,14 +19,13 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-const formSchema = z
-  .object({
-    email: z.string().email({ message: "Invalid email address." }),
-    password: z
-      .string()
-      .min(6, { message: "Password must be at least 6 characters." })
-      .regex(/\d/, { message: "Password must contain at least one number." })
-  })
+const formSchema = z.object({
+  email: z.string().email({ message: "Invalid email address." }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters." })
+    .regex(/\d/, { message: "Password must contain at least one number." }),
+});
 
 const Register = () => {
   const router = useRouter();
@@ -36,7 +35,7 @@ const Register = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: ""
+      password: "",
     },
     mode: "onChange",
   });
@@ -44,7 +43,7 @@ const Register = () => {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     await new Promise((r) => setTimeout(r, 1000));
     form.reset();
-    toast("Login Successfully")
+    toast("Login Successfully");
     router.push("/dashboard");
   }
 
@@ -120,13 +119,15 @@ const Register = () => {
             <div className="flex justify-center mx-auto max-w-md mt-10 mb-5">
               <Button
                 type="submit"
-                disabled={!form.formState.isValid || form.formState.isSubmitting}
+                disabled={
+                  !form.formState.isValid || form.formState.isSubmitting
+                }
                 className="py-6 bg-[#50C2C9] w-full text-lg font-semibold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 hover:bg-[#50c3c9ba]"
               >
                 {form.formState.isSubmitting ? (
                   <Loader2 className="animate-spin w-5 h-5" />
                 ) : (
-                  "Register"
+                  "Login"
                 )}
               </Button>
             </div>

@@ -1,5 +1,8 @@
+"use client"
+import 'react-day-picker/dist/style.css';
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -22,9 +25,11 @@ export default function Home() {
 
       <div className="flex justify-center mx-auto max-w-md mb-20">
         <div className="mx-4 w-full">
-          <Button className="py-6 bg-[#50C2C9] w-full text-lg font-semibold transition-all cursor-pointer hover:bg-[#50c3c9ba]">
-            Get Started
-          </Button>
+          <Link href="/register">
+            <Button className="py-6 bg-[#50C2C9] w-full text-lg font-semibold transition-all cursor-pointer hover:bg-[#50c3c9ba]">
+              Get Started
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
