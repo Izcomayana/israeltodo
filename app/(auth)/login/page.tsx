@@ -113,7 +113,10 @@ const Register = () => {
             />
 
             <div className="my-5 mx-auto w-fit">
+              <Link href="/forgotpassword">
               <p className="text-[#50C2C9]">Forgot password?</p>
+              </Link>
+              
             </div>
 
             <div className="flex justify-center mx-auto max-w-md mt-10 mb-5">
@@ -138,7 +141,7 @@ const Register = () => {
           <p className="text-base">
             Don’t have an account ?{" "}
             <span className="text-[#50C2C9]">
-              <Link href="/login">Sign Up</Link>
+              <Link href="/register">Sign Up</Link>
             </span>
           </p>
         </div>
