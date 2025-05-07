@@ -64,7 +64,11 @@ const ForgotPassword = () => {
             disabled={!form.formState.isValid || form.formState.isSubmitting}
             className="w-full py-6 bg-[#50C2C9] text-lg font-semibold hover:bg-[#50c3c9ba]"
           >
-            {form.formState.isSubmitting ? <span>Sending...</span> : "Send Reset Link"}
+            {form.formState.isSubmitting ? (
+              <span>Sending...</span>
+            ) : (
+              "Send Reset Link"
+            )}
           </Button>
         </form>
       </Form>
