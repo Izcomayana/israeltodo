@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+} from "firebase/firestore";
 import { format } from "date-fns";
 import { CalendarIcon, Trash2, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,59 +49,59 @@ export default function TaskList() {
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false);
   const [newTask, setNewTask] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(
-    undefined,
-  );
+  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(undefined);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
+  const taskCollection = collection(db, "tasks");
 
+ 
   useEffect(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    if (savedTasks) {
-      try {
-        const parsedTasks = JSON.parse(savedTasks).map((task: any) => ({
-          ...task,
-          dueDate: new Date(task.dueDate),
-          createdAt: new Date(task.createdAt),
-        }));
-        setTasks(parsedTasks);
-      } catch (error) {
-        console.error("Failed to parse tasks from localStorage:", error);
-      }
-    }
+    const unsubscribe = onSnapshot(taskCollection, (snapshot) => {
+      const firebaseTasks = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          dueDate: data.dueDate.toDate(),
+          createdAt: data.createdAt.toDate(),
+          completed: data.completed,
+        };
+      });
+      setTasks(firebaseTasks);
+    });
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
-
-  const addTask = () => {
-    if (newTask.trim() === "") return;
-
-    const task: Task = {
-      id: Date.now().toString(),
-      title: newTask,
-      dueDate: newTaskDueDate || new Date(),
+  const addTask = async (title: string, dueDate: Date) => {
+    await addDoc(taskCollection, {
+      title,
+      dueDate,
       createdAt: new Date(),
       completed: false,
-    };
-
-    setTasks([task, ...tasks]);
-    setNewTask("");
-    setNewTaskDueDate(undefined);
-    setNewTaskOpen(false);
+    });
   };
 
-  const toggleTaskCompletion = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task,
-      ),
+  const toggleTaskCompletion = async (task: Task) => {
+    const ref = doc(db, "tasks", task.id);
+    await updateDoc(ref, {
+      completed: !task.completed,
+    });
+  };
+
+  const updateTask = async (task: Task, newData: Partial<Task>) => {
+    const ref = doc(db, "tasks", task.id);
+    await updateDoc(ref, newData);
+  };
+
+  const deleteTask = async (taskId: string) => {
+    await deleteDoc(doc(db, "tasks", taskId));
+  };
+
+  const clearCompletedTasks = async () => {
+    const completed = tasks.filter((task) => task.completed);
+    await Promise.all(
+      completed.map((task) => deleteDoc(doc(db, "tasks", task.id)))
     );
-  };
-
-  const clearCompletedTasks = () => {
-    setTasks(tasks.filter((task) => !task.completed));
   };
 
   const openTaskDetails = (task: Task) => {
@@ -101,29 +111,6 @@ export default function TaskList() {
       dueDate: task.dueDate,
     });
     setTaskDetailsOpen(true);
-  };
-
-  const updateTask = () => {
-    if (!selectedTask || !editedTask.title) return;
-
-    setTasks(
-      tasks.map((task) =>
-        task.id === selectedTask.id
-          ? {
-              ...task,
-              title: editedTask.title || task.title,
-              dueDate: editedTask.dueDate || task.dueDate,
-            }
-          : task,
-      ),
-    );
-    setTaskDetailsOpen(false);
-  };
-
-  const deleteTask = () => {
-    if (!selectedTask) return;
-    setTasks(tasks.filter((task) => task.id !== selectedTask.id));
-    setTaskDetailsOpen(false);
   };
 
   return (
@@ -165,12 +152,12 @@ export default function TaskList() {
                   <div
                     key={task.id}
                     className="flex items-center space-x-2 py-2 hover:bg-slate-50 px-2 rounded"
-                    onClick={() => toggleTaskCompletion(task.id)}
+                    onClick={() => toggleTaskCompletion(task)}
                   >
                     <Checkbox
                       id={`task-${task.id}`}
                       checked={task.completed}
-                      onCheckedChange={() => toggleTaskCompletion(task.id)}
+                      onCheckedChange={() => toggleTaskCompletion(task)}
                       onClick={(e) => e.stopPropagation()}
                       className="h-5 w-5 border-gray-400 data-[state=checked]:bg-teal-500 data-[state=checked]:border-teal-500"
                     />
@@ -178,7 +165,7 @@ export default function TaskList() {
                       htmlFor={`task-${task.id}`}
                       className={cn(
                         "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1",
-                        task.completed && "line-through text-muted-foreground",
+                        task.completed && "line-through text-muted-foreground"
                       )}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -242,7 +229,7 @@ export default function TaskList() {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !newTaskDueDate && "text-muted-foreground",
+                      !newTaskDueDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -282,7 +269,18 @@ export default function TaskList() {
             <Button variant="outline" onClick={() => setNewTaskOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={addTask}>Add Task</Button>
+            <Button
+              onClick={() => {
+                if (newTask && newTaskDueDate) {
+                  addTask(newTask, newTaskDueDate);
+                  setNewTask("");
+                  setNewTaskDueDate(undefined);
+                  setNewTaskOpen(false);
+                }
+              }}
+            >
+              Add Task
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -341,7 +339,13 @@ export default function TaskList() {
                         className="mt-1"
                         defaultValue={
                           editedTask.dueDate
-                            ? `${editedTask.dueDate.getHours().toString().padStart(2, "0")}:${editedTask.dueDate.getMinutes().toString().padStart(2, "0")}`
+                            ? `${editedTask.dueDate
+                                .getHours()
+                                .toString()
+                                .padStart(2, "0")}:${editedTask.dueDate
+                                .getMinutes()
+                                .toString()
+                                .padStart(2, "0")}`
                             : ""
                         }
                         onChange={(e) => {
@@ -363,7 +367,13 @@ export default function TaskList() {
             </div>
           )}
           <DialogFooter className="flex justify-between">
-            <Button variant="destructive" onClick={deleteTask}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedTask) deleteTask(selectedTask.id);
+                setTaskDetailsOpen(false);
+              }}
+            >
               Delete
             </Button>
             <div className="flex gap-2">
@@ -373,7 +383,14 @@ export default function TaskList() {
               >
                 Cancel
               </Button>
-              <Button onClick={updateTask}>Save Changes</Button>
+              <Button
+                onClick={() => {
+                  if (selectedTask) updateTask(selectedTask, editedTask);
+                  setTaskDetailsOpen(false);
+                }}
+              >
+                Save Changes
+              </Button>
             </div>
           </DialogFooter>
         </DialogContent>
