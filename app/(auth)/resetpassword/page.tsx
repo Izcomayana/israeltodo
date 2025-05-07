@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
@@ -19,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Suspense } from 'react'
 
 const resetSchema = z
   .object({
@@ -78,7 +78,8 @@ const ResetPassword = () => {
 
 
   return (
-    <section className="max-w-md mx-auto mt-20">
+    <Suspense>
+       <section className="max-w-md mx-auto mt-20">
       <h2 className="text-center text-lg font-bold mb-6">Reset Password</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-4">
@@ -146,6 +147,8 @@ const ResetPassword = () => {
         </form>
       </Form>
     </section>
+    </Suspense>
+   
   );
 };
 
