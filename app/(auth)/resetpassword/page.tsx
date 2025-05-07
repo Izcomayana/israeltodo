@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
@@ -18,11 +19,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-// import { Suspense } from "react";
-// import ResetPassword from "./";
-
-
 
 const resetSchema = z
   .object({
