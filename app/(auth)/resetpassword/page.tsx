@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -140,7 +140,7 @@ const ResetPassword = () => {
             disabled={!form.formState.isValid || form.formState.isSubmitting}
             className="w-full py-6 bg-[#50C2C9] text-lg font-semibold hover:bg-[#50c3c9ba]"
           >
-            {form.formState.isSubmitting ? "Resetting..." : "Reset Password"}
+            {form.formState.isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : "Reset Password"}
           </Button>
         </form>
       </Form>
