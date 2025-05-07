@@ -1,8 +1,25 @@
+"use client";
+
 import Image from "next/image";
-import React from "react";
-import { TaskList } from "./components/tasklist/page";
+import React, { useEffect, useState } from "react";
+import TaskList from "./components/tasklist/page";
+import { withAuth } from "@/lib/withAuth";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 const Dashboard = () => {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.displayName) {
+        setUserName(user.displayName);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+  
   return (
     <section>
       <div className="relative bg-[#50C2C9] h-80">
@@ -13,7 +30,7 @@ const Dashboard = () => {
           <Image src={"/Ellipse.png"} width={100} height={100} alt="Ellipse" />
         </div>
         <p className="absolute bottom-4 left-1/2 -translate-x-1/2 font-bold text-lg text-white">
-          Welcome Jeegar Goyani
+          {userName ? `Welcome ${userName}` : "Welcome!"} 
         </p>
       </div>
 
@@ -25,7 +42,7 @@ const Dashboard = () => {
         <div className="flex justify-center items-center my-5">
           <Image src={"/clock.png"} width={100} height={100} alt="clock" />
         </div>
-        
+
         <h2 className="text-sm font-semibold">Task list</h2>
 
         <TaskList />
@@ -34,4 +51,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default withAuth(Dashboard);

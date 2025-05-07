@@ -7,17 +7,11 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Form } from "@/components/ui/form";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { registerWithEmail } from "@/lib/auth";
+import { TextField, PasswordField } from "../components/AuthFormFields";
 
 const formSchema = z
   .object({
@@ -59,7 +53,7 @@ const Register = () => {
         password: values.password,
         fullname: values.fullname,
       });
-  
+
       toast.success("Registered Successfully");
       router.push("/dashboard");
     } catch (error: any) {
@@ -81,101 +75,33 @@ const Register = () => {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-8 mx-4"
           >
-            <FormField
+            <TextField
               control={form.control}
               name="fullname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your full name"
-                      {...field}
-                      className="border-transparent focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-md pl-5 py-6 text-sm font-normal rounded-4xl bg-white"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Enter your full name"
             />
 
-            <FormField
+            <TextField
               control={form.control}
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      {...field}
-                      className="border-transparent focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-md pl-5 py-6 text-sm font-normal rounded-4xl bg-white"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Enter your email"
+              type="email"
             />
 
-            <FormField
+            <PasswordField
               control={form.control}
               name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        {...field}
-                        className="border-transparent focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-md pl-5 py-6 text-sm font-normal rounded-4xl bg-white pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
-                      >
-                        {showPassword ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Enter your password"
+              show={showPassword}
+              toggle={() => setShowPassword((prev) => !prev)}
             />
 
-            <FormField
+            <PasswordField
               control={form.control}
               name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
-                        {...field}
-                        className="border-transparent focus:ring-2 focus:ring-sky-500 focus:outline-none shadow-md pl-5 py-6 text-sm font-normal rounded-4xl bg-white pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Confirm your password"
+              show={showConfirmPassword}
+              toggle={() => setShowConfirmPassword((prev) => !prev)}
             />
 
             <div className="flex justify-center mx-auto max-w-md mt-10 mb-5">
