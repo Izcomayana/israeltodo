@@ -1,4 +1,5 @@
-// app/auth/layout.tsx
+import Image from "next/image";
+
 export default function AuthLayout({
   children,
 }: {
@@ -6,12 +7,9 @@ export default function AuthLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-100">
-        <main className="flex min-h-screen items-center justify-center">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-            {children}
-          </div>
-        </main>
+      <body className="container mx-auto">
+        <Image src={"/shapeone.png"} width={200} height={200} alt={""} />
+        <div className="">{children}</div>
       </body>
     </html>
   );
