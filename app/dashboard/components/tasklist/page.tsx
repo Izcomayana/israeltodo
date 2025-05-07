@@ -34,7 +34,7 @@ interface Task {
   completed: boolean;
 }
 
-export function TaskList() {
+export function Tasklist() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false);
@@ -45,12 +45,10 @@ export function TaskList() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editedTask, setEditedTask] = useState<Partial<Task>>({});
 
-  // Load tasks from localStorage on component mount
   useEffect(() => {
     const savedTasks = localStorage.getItem("tasks");
     if (savedTasks) {
       try {
-        // Parse the JSON and convert date strings back to Date objects
         const parsedTasks = JSON.parse(savedTasks).map((task: any) => ({
           ...task,
           dueDate: new Date(task.dueDate),
@@ -63,7 +61,6 @@ export function TaskList() {
     }
   }, []);
 
-  // Save tasks to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
@@ -79,7 +76,6 @@ export function TaskList() {
       completed: false,
     };
 
-    // Add new task to the beginning of the array
     setTasks([task, ...tasks]);
     setNewTask("");
     setNewTaskDueDate(undefined);
@@ -220,7 +216,6 @@ export function TaskList() {
         </div>
       </CardContent>
 
-      {/* Add Task Modal */}
       <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -292,7 +287,6 @@ export function TaskList() {
         </DialogContent>
       </Dialog>
 
-      {/* Task Details Modal */}
       <Dialog open={taskDetailsOpen} onOpenChange={setTaskDetailsOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
