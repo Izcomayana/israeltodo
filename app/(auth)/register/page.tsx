@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { registerWithEmail } from "@/lib/auth";
 
 const formSchema = z
   .object({
@@ -52,10 +53,19 @@ const Register = () => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await new Promise((r) => setTimeout(r, 1000));
-    form.reset();
-    toast("Registered Successfully");
-    router.push("/dashboard");
+    try {
+      const user = await registerWithEmail({
+        email: values.email,
+        password: values.password,
+        fullname: values.fullname,
+      });
+  
+      toast.success("Registered Successfully");
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Registration failed");
+    }
   }
 
   return (
