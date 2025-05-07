@@ -34,7 +34,7 @@ interface Task {
   completed: boolean;
 }
 
-export function Tasklist() {
+export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [taskDetailsOpen, setTaskDetailsOpen] = useState(false);

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { Tasklist } from "./components/tasklist/page";
+import TaskList from "./components/tasklist/page";
 import { withAuth } from "@/lib/withAuth";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -45,7 +45,7 @@ const Dashboard = () => {
 
         <h2 className="text-sm font-semibold">Task list</h2>
 
-        <Tasklist />
+        <TaskList />
       </div>
     </section>
   );
