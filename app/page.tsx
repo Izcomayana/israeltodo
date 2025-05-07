@@ -1,5 +1,5 @@
-"use client"
-import 'react-day-picker/dist/style.css';
+"use client";
+import "react-day-picker/dist/style.css";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";

@@ -9,17 +9,11 @@ import { toast } from "sonner";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Form } from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { TextField, PasswordField } from "../components/AuthFormFields";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address."),
@@ -44,31 +38,32 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         values.email,
-        values.password
+        values.password,
       );
       const token = await userCredential.user.getIdToken();
       document.cookie = `__session=${token}; path=/`;
-      
+
       toast.success("Login Successful");
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error); // <-- Debug output
-    
+
       const errorMessages: Record<string, string> = {
         "auth/user-not-found": "No user found with this email.",
         "auth/wrong-password": "Incorrect password.",
         "auth/invalid-email": "Email format is invalid.",
         "auth/user-disabled": "User account has been disabled.",
-        "auth/too-many-requests": "Too many login attempts. Please try again later.",
+        "auth/too-many-requests":
+          "Too many login attempts. Please try again later.",
         "auth/network-request-failed": "Network error. Check your connection.",
       };
-    
+
       const code = error?.code;
-      const message = errorMessages[code] || `Login failed. (${code ?? "Unknown error"})`;
+      const message =
+        errorMessages[code] || `Login failed. (${code ?? "Unknown error"})`;
       toast.error(message);
-    }    
+    }
   };
-  
 
   return (
     <section>
@@ -86,49 +81,19 @@ const Login = () => {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-8 mx-4"
           >
-            <FormField
+            <TextField
               control={form.control}
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      {...field}
-                      className="border-transparent focus:ring-2 focus:ring-sky-500 shadow-md pl-5 py-6 text-sm rounded-4xl bg-white"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Enter your email"
+              type="email"
             />
 
-            <FormField
+            <PasswordField
               control={form.control}
               name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your password"
-                        {...field}
-                        className="border-transparent focus:ring-2 focus:ring-sky-500 shadow-md pl-5 py-6 text-sm rounded-4xl bg-white pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              placeholder="Enter your password"
+              show={showPassword}
+              toggle={() => setShowPassword((prev) => !prev)}
             />
 
             <div className="my-5 mx-auto w-fit">
@@ -140,7 +105,9 @@ const Login = () => {
             <div className="flex justify-center mx-auto max-w-md mt-10 mb-5">
               <Button
                 type="submit"
-                disabled={!form.formState.isValid || form.formState.isSubmitting}
+                disabled={
+                  !form.formState.isValid || form.formState.isSubmitting
+                }
                 className="py-6 bg-[#50C2C9] w-full text-lg font-semibold cursor-pointer disabled:opacity-60 hover:bg-[#50c3c9ba]"
               >
                 {form.formState.isSubmitting ? (

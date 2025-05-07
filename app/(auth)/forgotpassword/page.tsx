@@ -5,19 +5,12 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Loader2 } from "lucide-react";
+import { TextField } from "../components/AuthFormFields";
 
 const forgotSchema = z.object({
   email: z.string().email({ message: "Enter a valid email" }),
@@ -33,7 +26,9 @@ const ForgotPassword = () => {
   const onSubmit = async (values: z.infer<typeof forgotSchema>) => {
     try {
       await sendPasswordResetEmail(auth, values.email);
-      toast.success("If your email exists, a reset link was sent. kindly check your mail and close this tab");
+      toast.success(
+        "If your email exists, a reset link was sent. kindly check your mail and close this tab",
+      );
       form.reset();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
@@ -45,22 +40,11 @@ const ForgotPassword = () => {
       <h2 className="text-center text-lg font-bold mb-6">Forgot Password</h2>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-4">
-          <FormField
+          <TextField
             control={form.control}
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Enter your email"
-                    type="email"
-                    {...field}
-                    className="py-6 px-5 rounded-4xl shadow-md focus:ring-2 focus:ring-sky-500"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            placeholder="Enter your email"
+            type="email"
           />
 
           <Button

@@ -28,7 +28,7 @@ const Dashboard = () => {
         <div className="flex justify-center items-center my-5">
           <Image src={"/clock.png"} width={100} height={100} alt="clock" />
         </div>
-        
+
         <h2 className="text-sm font-semibold">Task list</h2>
 
         <TaskList />
