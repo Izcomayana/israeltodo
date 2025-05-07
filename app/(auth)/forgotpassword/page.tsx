@@ -16,6 +16,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { Loader2 } from "lucide-react";
 
 const forgotSchema = z.object({
   email: z.string().email({ message: "Enter a valid email" }),
@@ -30,10 +33,14 @@ const ForgotPassword = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof forgotSchema>) => {
-    await new Promise((r) => setTimeout(r, 1000));
-    toast("Password reset link sent");
-    form.reset();
-    router.push("/reset-password");
+    try {
+      await sendPasswordResetEmail(auth, values.email);
+      toast.success("Password reset link sent");
+      form.reset();
+      router.push("/resetpassword");
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong");
+    }
   };
 
   return (
@@ -62,10 +69,10 @@ const ForgotPassword = () => {
           <Button
             type="submit"
             disabled={!form.formState.isValid || form.formState.isSubmitting}
-            className="w-full py-6 bg-[#50C2C9] text-lg font-semibold hover:bg-[#50c3c9ba]"
+            className="w-full py-6 bg-[#50C2C9] text-lg font-semibold cursor-pointer hover:bg-[#50c3c9ba]"
           >
             {form.formState.isSubmitting ? (
-              <span>Sending...</span>
+              <Loader2 className="animate-spin w-5 h-5" />
             ) : (
               "Send Reset Link"
             )}
