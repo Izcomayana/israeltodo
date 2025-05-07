@@ -4,7 +4,7 @@ import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ const forgotSchema = z.object({
 });
 
 const ForgotPassword = () => {
-  const router = useRouter();
+  // const router = useRouter();
   const form = useForm<z.infer<typeof forgotSchema>>({
     resolver: zodResolver(forgotSchema),
     defaultValues: { email: "" },
@@ -35,9 +35,9 @@ const ForgotPassword = () => {
   const onSubmit = async (values: z.infer<typeof forgotSchema>) => {
     try {
       await sendPasswordResetEmail(auth, values.email);
-      toast.success("Password reset link sent");
+      toast.success("Password reset link sent, check your mail and close this tab");
       form.reset();
-      router.push("/resetpassword");
+      // router.push("/resetpassword");
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     }
