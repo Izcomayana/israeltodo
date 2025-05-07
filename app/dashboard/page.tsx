@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
 import { TaskList } from "./components/tasklist/page";
+import { withAuth } from "@/lib/withAuth";
 
 const Dashboard = () => {
   return (
@@ -34,4 +37,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default withAuth(Dashboard);
