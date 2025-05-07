@@ -1,7 +1,5 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-// import shapeone from "@/public/shapeone.png";
-// import undraw from "@/public/undraw.png";
 
 export default function Home() {
   return (
