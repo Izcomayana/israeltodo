@@ -1,12 +1,12 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import shape1 from "@/public/shape1.png";
+import shapeone from "@/public/shapeone.png";
 import undraw from "@/public/undraw.png";
 
 export default function Home() {
   return (
     <div className="container mx-auto">
-      <Image src={shape1} alt={""} />
+      <Image src={shapeone} alt={""} />
       <div className="flex justify-center mx-auto mt-20">
         <Image src={undraw} alt={""} />
       </div>
