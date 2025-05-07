@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
-
+import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -35,6 +36,10 @@ const ResetPassword = () => {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const searchParams = useSearchParams();
+  const oobCode = searchParams.get("oobCode");
+  const mode = searchParams.get("mode");
+  const [validCode, setValidCode] = useState(false);
 
   const form = useForm<z.infer<typeof resetSchema>>({
     resolver: zodResolver(resetSchema),
@@ -42,12 +47,34 @@ const ResetPassword = () => {
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (mode !== "resetPassword" || !oobCode) {
+      toast.error("Invalid or expired password reset link");
+      router.push("/login");
+      return;
+    }
+
+    verifyPasswordResetCode(auth, oobCode)
+      .then(() => setValidCode(true))
+      .catch(() => {
+        toast.error("Invalid or expired reset code.");
+        router.push("/login");
+      });
+  }, [oobCode, mode, router]);
+
   const onSubmit = async (values: z.infer<typeof resetSchema>) => {
-    await new Promise((r) => setTimeout(r, 1000));
-    toast("Password has been reset successfully");
-    form.reset();
-    router.push("/login");
+    if (!oobCode) return;
+    try {
+      await confirmPasswordReset(auth, oobCode, values.password);
+      toast.success("Password has been reset!");
+      router.push("/login");
+    } catch (error) {
+      toast.error("Failed to reset password");
+    }
   };
+
+  if (!validCode) return null;
+
 
   return (
     <section className="max-w-md mx-auto mt-20">
